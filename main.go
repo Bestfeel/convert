@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"flag"
 	"os"
+	"bufio"
+	"log"
 )
 
 const (
@@ -46,7 +48,7 @@ const LOGO = `
                                           机智云只为硬件而生的云服务
 
 
-
+带参数输入:
 -s string
 
     	输入16进制的字符串
@@ -54,6 +56,10 @@ const LOGO = `
 example:
 
 convert -s="00000003  15  00  0091  04  0000000000000000000000000000000000"
+
+交互式输入:
+
+>>00000003  15  00  0091  04  0000000000000000000000000000000000
 
 输出:
 
@@ -73,15 +79,32 @@ func FormatByte(b []byte) string {
 
 func main() {
 	args := os.Args[1:]
-	if len(args) < 1 {
-		fmt.Printf("\x1b[%d;1m%s\x1b[0m", COLOR_MAGENTA, LOGO+"\n")
+	fmt.Printf("\x1b[%d;1m%s\x1b[0m", COLOR_MAGENTA, LOGO+"\n")
+
+	flag.Parse()
+	if len(args) == 1 {
+		trim := strings.Replace(*hexStr, " ", "", -1)
+		str := strings.Replace(trim, "\n", "", -1)
+		fmt.Println(str)
+		bye := HexToBye(str)
+		fmt.Println(bye)
+		fmt.Printf("[%s]\n", FormatByte(bye))
 		return
 	}
-	flag.Parse()
-	trim := strings.Replace(*hexStr, " ", "", -1)
-	str := strings.Replace(trim, "\n", "", -1)
-	fmt.Println(str)
-	bye := HexToBye(str)
-	fmt.Println(bye)
-	fmt.Printf("[%s]\n", FormatByte(bye))
+
+	bio := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print(">>")
+		line, err := bio.ReadString('\n')
+		if err != nil {
+			log.Fatalln(err)
+		}
+		trim := strings.Replace(line, " ", "", -1)
+		str := strings.Replace(trim, "\n", "", -1)
+		fmt.Println(str)
+		bye := HexToBye(str)
+		fmt.Println(bye)
+		fmt.Printf("[%s]\n", FormatByte(bye))
+	}
 }
